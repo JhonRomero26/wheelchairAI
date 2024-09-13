@@ -24,8 +24,8 @@ Aplicación móvil para el control de la silla de ruedas [Hanalabz Wheelchair](h
 
   - [Hanalabz Wheelchair App](#hanalabz-wheelchair-app)
   - [Desarrolladores](#desarrolladores)
-  - []()
-  - []()
+  - [Agradecimientos](#agradecimientos)
+  - [Contribuidores](#contribuidores)
 </details>
 
 ## Desarrolladores
