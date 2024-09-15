@@ -40,17 +40,7 @@ void Wheelchair::begin(int bauds) {
 }
 
 void Wheelchair::loop() {
-  ble.checkToReconnect();
-
-  if (
-    !ble.isConnected() &&
-    leftEngineSpeed != 0 &&
-    rightEngineSpeed != 0
-  ) {
-    ble.getControlCharacteristic()->setValue("ms");
-    stop();
-    return;
-  };
+  verifyBLEConnection();
 
   const std::string cmd = trim(ble.getControlCharacteristic()->getValue());
 
@@ -264,4 +254,21 @@ void Wheelchair::stop() {
   }
 
   prevMoveTime = millis();
+}
+
+void Wheelchair::verifyBLEConnection() {
+  ble.checkToReconnect();
+  
+  if (ble.isConnected()) {
+    prevReconnectTime = millis();
+  } else if (
+    millis() - prevReconnectTime > TIME_FOR_BLE_RECONNECT &&
+    (leftEngineSpeed != 0 || rightEngineSpeed != 0)
+  ) {
+      ble.getControlCharacteristic()->setValue("ms");
+      while (leftEngineSpeed != 0 || rightEngineSpeed != 0) {
+          stop();
+      }
+      prevReconnectTime = millis();
+  }
 }

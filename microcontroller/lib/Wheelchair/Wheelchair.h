@@ -17,6 +17,10 @@
   #define TIME_FOR_STOP  50   // time for stop in ms
 #endif
 
+#ifndef TIME_FOR_BLE_RECONNECT
+  #define TIME_FOR_BLE_RECONNECT  6000   // time for reconnect BLE in ms
+#endif
+
 // MOVEMENT_COMMAND
 #define WHEELCHAIR_MOVE_FORWARD "mf"
 #define WHEELCHAIR_MOVE_LEFT "ml"
@@ -70,6 +74,7 @@ class Wheelchair {
     std::string oldCmd = "";
 
     unsigned long prevMoveTime = 0;
+    unsigned long prevReconnectTime = 0;
 
   private:
     void moveForward();
@@ -80,7 +85,7 @@ class Wheelchair {
     void rotateLeft();
     void rotateRight();
     void movements(const std::string *cmd);
-    void adjustSpeed(int& speed, int targetSpeed);
+    void verifyBLEConnection();
     void adjustSpeed(int& speed, int targetSpeed, int acceleration);
 
   public:
