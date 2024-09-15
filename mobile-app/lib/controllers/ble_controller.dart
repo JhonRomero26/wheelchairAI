@@ -10,6 +10,7 @@ import 'package:wheelchair/utils/constants.dart';
 
 class BleController extends GetxController {
   final FlutterReactiveBle _ble = FlutterReactiveBle();
+  final String bleName = "hanalab wheelchair";
 
   static BleController get to => Get.find();
 
@@ -59,6 +60,7 @@ class BleController extends GetxController {
           final name = device.name.toLowerCase();
 
           if (name.isNotEmpty &&
+              name.contains(bleName) &&
               _devicesDiscovered.where((el) => el.id == device.id).isEmpty) {
             _devicesDiscovered.add(device);
           }
