@@ -57,13 +57,29 @@ class ActionsControl extends StatelessWidget {
             }
           },
           icon: Obx(
-            () => Icon(
-              Icons.bluetooth,
-              color: BleController.to.connectionState ==
-                      DeviceConnectionState.connected
-                  ? Colors.green
-                  : null,
-            ),
+            () => Stack(children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: BleController.to.connectionState ==
+                              DeviceConnectionState.connected
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                    width: 8,
+                    height: 8),
+              ),
+              Icon(
+                Icons.bluetooth,
+                color: BleController.to.connectionState ==
+                        DeviceConnectionState.connected
+                    ? Colors.green
+                    : null,
+              ),
+            ]),
           ),
         ),
       ],

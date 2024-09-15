@@ -60,7 +60,6 @@ class BleController extends GetxController {
           final name = device.name.toLowerCase();
 
           if (name.isNotEmpty &&
-              name.contains(bleName) &&
               _devicesDiscovered.where((el) => el.id == device.id).isEmpty) {
             _devicesDiscovered.add(device);
           }
@@ -82,16 +81,18 @@ class BleController extends GetxController {
   }
 
   Future<void> connect({
-    required String deviceId,
+    required String connectDeviceId,
     Duration connectionTimeout = const Duration(seconds: 10),
   }) async {
     disconnect();
     _connection = _ble
-        .connectToDevice(id: deviceId, connectionTimeout: connectionTimeout)
+        .connectToDevice(
+            id: connectDeviceId, connectionTimeout: connectionTimeout)
         .listen((state) async {
       if (connectionState != state.connectionState) {
         _connectionState.value = state.connectionState;
         if (state.connectionState == DeviceConnectionState.connected) {
+          _deviceId.value = connectDeviceId;
           _isConnected.value = true;
         } else if (state.connectionState ==
             DeviceConnectionState.disconnected) {
@@ -100,38 +101,39 @@ class BleController extends GetxController {
       }
 
       if (state.connectionState == DeviceConnectionState.connected) {
-        _deviceId.value = deviceId;
-        final services = await _discoverServices(deviceId: deviceId);
-
-        for (Service service in services) {
-          for (Characteristic characteristic in service.characteristics) {
-            if (BleCharacteristicsUUID.whleechairControl.value ==
-                characteristic.id.toString()) {
-              _characteristic = QualifiedCharacteristic(
-                characteristicId: characteristic.id,
-                serviceId: service.id,
-                deviceId: deviceId,
-              );
-              _connectionState.value = DeviceConnectionState.connected;
-              _isConnected.value = true;
-            }
-          }
-        }
+        discoverCharacteristics();
       }
     });
   }
 
+  Future<void> discoverCharacteristics() async {
+    final services = await _discoverServices(deviceId: deviceId);
+
+    for (Service service in services) {
+      for (Characteristic characteristic in service.characteristics) {
+        if (BleCharacteristicsUUID.whleechairControl.value ==
+            characteristic.id.toString()) {
+          _characteristic = QualifiedCharacteristic(
+            characteristicId: characteristic.id,
+            serviceId: service.id,
+            deviceId: deviceId,
+          );
+          _connectionState.value = DeviceConnectionState.connected;
+          _isConnected.value = true;
+        }
+      }
+    }
+  }
+
   Future<void> disconnect() async {
     try {
-      if (connectionState == DeviceConnectionState.connected &&
-          _connection != null &&
-          deviceId == "") {
-        _isConnected.value = false;
+      if (_connection != null) {
         await _connection?.cancel();
         _connection = null;
-        _deviceId.value = "";
-        _characteristic = null;
       }
+      _isConnected.value = false;
+      _deviceId.value = "";
+      _characteristic = null;
     } on Exception catch (e) {
       log(e.toString());
     } finally {
