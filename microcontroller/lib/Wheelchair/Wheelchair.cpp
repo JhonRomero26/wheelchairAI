@@ -27,21 +27,31 @@ bool isOffLeftRightCommand(const std::string* cmd) {
 void Wheelchair::begin(int bauds) {
   SabertoothTXPinSerial.begin(bauds);
   ble.begin("Hanalab Wheelchair");
-  if (!debug) {
+
+  if (debug) {
     st.motor(MOTOR_LEFT, 0);
     st.motor(MOTOR_RIGHT, 0);
   } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
-
-    Serial.print("Right and Left move percent: ");
-    Serial.println(WHEELCHAIR_MOVE_LEFT_RIGHT_PERCENT);
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+    Serial.printf(">Engine correction: %f\n", this->engineCorection);
+    Serial.printf(">Acceleration: %d\n", this->acceleration);
   }
 }
 
 void Wheelchair::loop() {
+  ble.checkToReconnect();
+
+  if (
+    !ble.isConnected() &&
+    leftEngineSpeed != 0 &&
+    rightEngineSpeed != 0
+  ) {
+    ble.getControlCharacteristic()->setValue("ms");
+    stop();
+    return;
+  };
+
   const std::string cmd = trim(ble.getControlCharacteristic()->getValue());
 
   const size_t separatorIndex = cmd.find(WHEELCHAIR_VALUE_SEPARATOR_CMD);
@@ -49,9 +59,11 @@ void Wheelchair::loop() {
     if (cmd.rfind(WHEELCHAIR_ENGINE_CORRECTION_CMD, 0) == 0) {
       float data = std::stof(cmd.substr(separatorIndex + 1));
       this->engineCorection = data / 100; 
+      if (debug) Serial.printf(">Engine correction: %f\n", this->engineCorection);
     }
     if (cmd.rfind(WHEELCHAIR_SPEED_CORRECTION_CMD, 0) == 0) {
       this->acceleration = std::stoi(cmd.substr(separatorIndex + 1));
+      if (debug) Serial.printf(">Acceleration: %d\n", this->acceleration);
     }
   }
 
@@ -67,9 +79,6 @@ void Wheelchair::loop() {
 }
 
 void Wheelchair::movements(const std::string* cmd) {
-  const unsigned long isTimeForMove = millis() - prevMoveTime > TIME_FOR_MOVE;
-  const unsigned long isTimeForStop = millis() - prevMoveTime > TIME_FOR_STOP;
-
   if (isMovesCommand(cmd)) {
     directionCommand = *cmd;
   } else if (isLeftRightCommand(cmd)) {
@@ -81,28 +90,20 @@ void Wheelchair::movements(const std::string* cmd) {
 
 
   if (
-    directionCommand == WHEELCHAIR_MOVE_LEFT && isTimeForMove) {
+    directionCommand == WHEELCHAIR_MOVE_LEFT) {
       moveLeft();
-      prevMoveTime = millis();
-  } else if (
-    directionCommand == WHEELCHAIR_MOVE_RIGHT && isTimeForMove) {
+  } else if (directionCommand == WHEELCHAIR_MOVE_RIGHT) {
       moveRight();
-      prevMoveTime = millis();
-  } else if (directionCommand == WHEELCHAIR_ROTATE_LEFT && isTimeForMove) {
+  } else if (directionCommand == WHEELCHAIR_ROTATE_LEFT) {
       rotateLeft();
-      prevMoveTime = millis();
-  } else if (directionCommand == WHEELCHAIR_ROTATE_RIGHT && isTimeForMove) {
+  } else if (directionCommand == WHEELCHAIR_ROTATE_RIGHT) {
       rotateRight();
-      prevMoveTime = millis();
-  } else if (directionCommand == WHEELCHAIR_MOVE_FORWARD && isTimeForMove) {
+  } else if (directionCommand == WHEELCHAIR_MOVE_FORWARD) {
       moveForward();
-      prevMoveTime = millis();
-  } else if (directionCommand == WHEELCHAIR_MOVE_STOP && isTimeForStop) {
+  } else if (directionCommand == WHEELCHAIR_MOVE_STOP) {
       stop();
-      prevMoveTime = millis();
-  } else if (directionCommand == WHEELCHAIR_MOVE_BACKWARD && isTimeForMove) {
+  } else if (directionCommand == WHEELCHAIR_MOVE_BACKWARD) {
       moveBackward();
-      prevMoveTime = millis();
   }
 }
 
@@ -117,23 +118,24 @@ void Wheelchair::adjustSpeed(int& speed, int targetSpeed, int acceleration) {
 }
 
 void Wheelchair::moveForward() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   const int8_t maxSpeed = MAX_SPEED_MOTOR * this->speedPercent;
 
   adjustSpeed(leftEngineSpeed, maxSpeed, this->acceleration);
   adjustSpeed(rightEngineSpeed, maxSpeed, this->acceleration);
 
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed * this->engineCorection);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::moveLeft() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   int maxSpeed = MAX_SPEED_MOTOR * this->speedPercent;
   int limiterSpeed = maxSpeed * WHEELCHAIR_MOVE_LEFT_RIGHT_PERCENT;;
 
@@ -145,18 +147,18 @@ void Wheelchair::moveLeft() {
   adjustSpeed(leftEngineSpeed, leftSpeed, this->acceleration);
   adjustSpeed(rightEngineSpeed, rightSpeed, this->acceleration);
   
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed * this->engineCorection);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::moveRight() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   int maxSpeed = MAX_SPEED_MOTOR * this->speedPercent;
   int limiterSpeed = maxSpeed * WHEELCHAIR_MOVE_LEFT_RIGHT_PERCENT;
 
@@ -170,18 +172,18 @@ void Wheelchair::moveRight() {
   adjustSpeed(leftEngineSpeed, leftSpeed, this->acceleration);
   adjustSpeed(rightEngineSpeed, rightSpeed, this->acceleration);
   
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed * 0.8);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed * this->engineCorection);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::rotateLeft() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   const int8_t maxSpeed = WHEELCHAIR_ROTATE_SPEED;
 
   const int8_t rightSpeed = maxSpeed;
@@ -193,18 +195,18 @@ void Wheelchair::rotateLeft() {
   adjustSpeed(leftEngineSpeed, leftSpeed, acc);
   adjustSpeed(rightEngineSpeed, rightSpeed, acc);
   
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed * 0.6);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed * this->engineCorection * 0.6);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::rotateRight() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   const int8_t maxSpeed = WHEELCHAIR_ROTATE_SPEED;
 
   const int8_t rightSpeed = -(maxSpeed * 2.3);
@@ -216,35 +218,35 @@ void Wheelchair::rotateRight() {
   adjustSpeed(leftEngineSpeed, leftSpeed, acc);
   adjustSpeed(rightEngineSpeed, rightSpeed, acc);
   
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed * this->engineCorection * 0.6);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed * 0.6);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::moveBackward() {
+  if (millis() - prevMoveTime < TIME_FOR_MOVE) return;
   const int8_t maxSpeed = -MAX_SPEED_MOTOR * this->speedPercent;
 
   adjustSpeed(leftEngineSpeed, maxSpeed, this->acceleration);
   adjustSpeed(rightEngineSpeed, maxSpeed, this->acceleration);
 
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed * 0.98);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
   }
+  prevMoveTime = millis();
 }
 
 void Wheelchair::stop() {
+  if (millis() - prevMoveTime < TIME_FOR_STOP) return;
   if (this->leftEngineSpeed == 0 && this->rightEngineSpeed == 0) return;
 
   int acc = this->acceleration + 3;
@@ -253,28 +255,13 @@ void Wheelchair::stop() {
   adjustSpeed(this->leftEngineSpeed, 0, acc);
   adjustSpeed(this->rightEngineSpeed, 0, acc);
 
-  if (!debug) {
+  if (debug) {
+    Serial.printf(">Motor Left: %d\n", this->leftEngineSpeed);
+    Serial.printf(">Motor Right: %d\n", this->rightEngineSpeed);
+  } else {
     st.motor(MOTOR_LEFT, this->leftEngineSpeed);
     st.motor(MOTOR_RIGHT, this->rightEngineSpeed);
-  } else {
-    Serial.print("Left: ");
-    Serial.println(this->leftEngineSpeed);
-    Serial.print("Right: ");
-    Serial.println(this->rightEngineSpeed);
-  }
-}
-
-std::string trim(const std::string& str) {
-  size_t first = str.find_first_not_of(" \n\r\t");
-  size_t last = str.find_last_not_of(" \n\r\t");
-
-  if (first != std::string::npos && last != std::string::npos) {
-    return str.substr(first, (last - first + 1));
-  } else if (first != std::string::npos) {
-    return str.substr(first);
-  } else if (last != std::string::npos) {
-    return str.substr(0, (last + 1));
   }
 
-  return "";
+  prevMoveTime = millis();
 }

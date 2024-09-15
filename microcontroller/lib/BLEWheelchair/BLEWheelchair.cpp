@@ -6,7 +6,7 @@ void BLEWheelchair::begin(const char *name) {
   BLEAdvertising *advertising = BLEDevice::getAdvertising();
   server = BLEDevice::createServer();
 
-  server->setCallbacks(new ServerCallbacks());
+  server->setCallbacks(new WheelchairCallbacks(&deviceConnected));
 
   // Services
   BLEService *controlServ = server->createService(CONTROLS_SERVICE_UUID);
@@ -23,9 +23,28 @@ void BLEWheelchair::begin(const char *name) {
   advertising->setScanResponse(true);
   advertising->setMinPreferred(0x06);
   advertising->setMinPreferred(0x12);
-  BLEDevice::startAdvertising();
+  server->getAdvertising()->start();
 }
 
 BLECharacteristic * BLEWheelchair::getControlCharacteristic() {
   return &controlsCharacteristic;
+}
+
+
+void BLEWheelchair::checkToReconnect() {
+  if (!deviceConnected && oldDeviceConnected) {
+    if (millis() - prevReconnectTime > 500) {
+      server->startAdvertising();
+      oldDeviceConnected = deviceConnected;
+      prevReconnectTime = millis();
+    }
+  }
+
+  if (deviceConnected && !oldDeviceConnected) {
+    oldDeviceConnected = deviceConnected;
+  }
+}
+
+bool BLEWheelchair::isConnected() {
+  return deviceConnected;
 }

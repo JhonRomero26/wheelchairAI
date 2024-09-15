@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include "BLEWheelchair.h"
 #include "SabertoothSimplified.h"
+#include "utils.h"
 
 
 #define MAX_SPEED_MOTOR 127  // max speed motor
