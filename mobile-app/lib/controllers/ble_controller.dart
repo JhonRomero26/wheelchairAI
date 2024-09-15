@@ -97,6 +97,7 @@ class BleController extends GetxController {
         } else if (state.connectionState ==
             DeviceConnectionState.disconnected) {
           _isConnected.value = false;
+          await reconnect();
         }
       }
 
@@ -122,6 +123,14 @@ class BleController extends GetxController {
           _isConnected.value = true;
         }
       }
+    }
+  }
+
+  Future<void> reconnect() async {
+    if (!isConnected && deviceId != "") {
+      await Future.delayed(const Duration(milliseconds: 600), () async {
+        await connect(connectDeviceId: deviceId);
+      });
     }
   }
 
