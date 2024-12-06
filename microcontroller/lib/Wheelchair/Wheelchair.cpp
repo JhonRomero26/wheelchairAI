@@ -1,7 +1,7 @@
 #include "Wheelchair.h"
 
 
-bool debug = true;
+bool debug = false;
 unsigned long testTime = 0;
 
 
