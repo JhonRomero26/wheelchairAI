@@ -1,19 +1,23 @@
 import 'package:wheelchair/controllers/wheelchair_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wheelchair/ui/widgets/gesture_button.dart';
+import 'package:wheelchair/utils/colors.dart';
 
 class SpeedOption extends StatelessWidget {
   final Icon icon;
   final Text title;
-  final GestureTapCallback onPress;
+  final GestureTapCallback? onTap;
+  final GestureTapCallback? onDoubleTap;
   final int index;
 
-  SpeedOption({
+  const SpeedOption({
     super.key,
     required this.icon,
     required this.title,
-    required this.onPress,
     required this.index,
+    this.onTap,
+    this.onDoubleTap,
   });
 
   @override
@@ -21,26 +25,32 @@ class SpeedOption extends StatelessWidget {
     final TextTheme textTheme = Theme.of(context).textTheme;
 
     return Expanded(
-      child: InkWell(
-        onTap: onPress,
+      child: GestureButton(
+        onTap: onTap,
+        onDoubleTap: onDoubleTap,
         splashColor: Colors.transparent,
         child: Obx(() {
           final isSelected = index == WheelchairController.to.speedModeIndex;
           return Container(
             padding: const EdgeInsets.all(12),
-            color: isSelected ? Colors.deepPurple : null,
+            color: isSelected ? KDarkTheme.primary.withAlpha(25) : null,
             child: Column(
               children: [
                 IconTheme(
                   data: IconThemeData(
-                    color: isSelected ? Colors.white : Colors.deepPurple,
+                    color: isSelected
+                        ? KDarkTheme.primary
+                        : KDarkTheme.typography.body,
                   ),
                   child: icon,
                 ),
                 // Widget for change style text widget child
                 DefaultTextStyle(
                     style: textTheme.bodyMedium!.copyWith(
-                      color: isSelected ? Colors.white : Colors.deepPurple,
+                      fontSize: 12,
+                      color: isSelected
+                          ? KDarkTheme.primary
+                          : KDarkTheme.typography.body,
                     ),
                     child: title)
               ],

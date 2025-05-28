@@ -10,6 +10,10 @@ class WheelchairController extends GetxController {
   static const double _minEngineCorrection = 30;
   static double get minEngineCorrection => _minEngineCorrection;
 
+  // Modes
+  final _homeMode = true.obs;
+  bool get homeMode => _homeMode.value;
+
   // Acceleration
   static const double _maxAcceleration = 5;
   static double get maxAcceleration => _maxAcceleration;
@@ -27,6 +31,21 @@ class WheelchairController extends GetxController {
   int get speedModeIndex => _speedModeIndex.value;
 
   static WheelchairController get to => Get.find();
+
+  void setHomeMode(bool value) {
+    _homeMode.value = value;
+  }
+
+  void toggleHomeMode() {
+    setHomeMode(!homeMode);
+    sendHomeMode();
+  }
+
+  void sendHomeMode() {
+    homeMode
+        ? BleController.to.sendData(ModeCommands.homeOn.value)
+        : BleController.to.sendData(ModeCommands.homeOff.value);
+  }
 
   void setEngineCorrection(int value) {
     _engineCorrection.value = value;
@@ -48,20 +67,29 @@ class WheelchairController extends GetxController {
     BleController.to.sendData("${speedMapping[idx]}");
   }
 
-  void cancelMoveLeft() =>
-      BleController.to.sendData(MovementCommands.leftOff.value);
-  void cancelMoveRight() =>
-      BleController.to.sendData(MovementCommands.rightOff.value);
+  void cancelMoveLeft() {
+    BleController.to.sendData(MovementCommands.leftOff.value);
+  }
 
-  void moveLeft() => BleController.to.sendData(MovementCommands.left.value);
+  void cancelMoveRight() {
+    BleController.to.sendData(MovementCommands.rightOff.value);
+  }
 
-  void moveRight() => BleController.to.sendData(MovementCommands.right.value);
+  void moveLeft() {
+    BleController.to.sendData(MovementCommands.left.value);
+  }
 
-  void rotateLeft() =>
-      BleController.to.sendData(MovementCommands.rotateLeft.value);
+  void moveRight() {
+    BleController.to.sendData(MovementCommands.right.value);
+  }
 
-  void rotateRight() =>
-      BleController.to.sendData(MovementCommands.rotateRigh.value);
+  void rotateLeft() {
+    BleController.to.sendData(MovementCommands.rotateLeft.value);
+  }
+
+  void rotateRight() {
+    BleController.to.sendData(MovementCommands.rotateRigh.value);
+  }
 
   void moveForward() {
     BleController.to.sendData(MovementCommands.forward.value);

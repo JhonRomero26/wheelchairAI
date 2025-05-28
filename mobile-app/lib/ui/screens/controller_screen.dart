@@ -3,8 +3,9 @@ import 'package:wheelchair/controllers/ble_controller.dart';
 import 'package:wheelchair/ui/widgets/actions_control.dart';
 import 'package:wheelchair/ui/widgets/control_heading.dart';
 import 'package:wheelchair/ui/widgets/central_control.dart';
-import 'package:wheelchair/ui/widgets/directions_control.dart';
+import 'package:wheelchair/ui/widgets/directions_central.dart';
 import 'package:wheelchair/ui/widgets/speed_selector.dart';
+import 'package:wheelchair/utils/colors.dart';
 
 class ControllerScreen extends StatefulWidget {
   static const String id = 'ControlScreen';
@@ -40,19 +41,23 @@ class _ControllerScreenState extends State<ControllerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: xPadding),
             child: Column(
               children: [
-                const SizedBox(height: 80),
+                const SizedBox(height: 70),
                 // const TablerIndicator(),
                 // const SizedBox(height: 16),
                 const ActionsControl(),
-                const SizedBox(height: 32),
-                const DirectionsControl(),
+                const SizedBox(height: 8),
+                // const DirectionsControl(),
+                const DirectionsCentral(),
+                const SizedBox(height: 8),
                 const CentralControl(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 63),
                 // const RotationControl(),
                 // const SizedBox(height: 32),
                 Text(
                   'Velocidad',
-                  style: textTheme.titleMedium,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: KDarkTheme.typography.muted,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const SpeedSelector(),

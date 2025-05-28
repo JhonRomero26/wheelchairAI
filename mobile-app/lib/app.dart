@@ -5,6 +5,7 @@ import 'package:wheelchair/controllers/wheelchair_controller.dart';
 import 'package:wheelchair/ui/screens/controller_screen.dart';
 import 'package:wheelchair/ui/screens/welcome_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:wheelchair/utils/colors.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -25,8 +26,21 @@ class App extends StatelessWidget {
       title: 'Hanalab Wheelchair App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: KColors.primary,
+        ),
+        scaffoldBackgroundColor: KDarkTheme.background,
         useMaterial3: true,
+        iconTheme: IconTheme.of(context).copyWith(
+          color: KDarkTheme.typography.body,
+        ),
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: KDarkTheme.typography.body,
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
       ),
       initialRoute: WelcomeScreen.id,
       routes: {

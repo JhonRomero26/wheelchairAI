@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:wheelchair/utils/colors.dart';
 
 class SliderWidget extends StatelessWidget {
   final double value, min, max, width;
@@ -22,7 +23,7 @@ class SliderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labelColor = Colors.white;
+    final labelColor = KDarkTheme.typography.primary;
 
     return SliderTheme(
       data: SliderThemeData(
@@ -30,8 +31,8 @@ class SliderWidget extends StatelessWidget {
         thumbShape: SliderComponentShape.noOverlay,
         overlayShape: SliderComponentShape.noOverlay,
         valueIndicatorShape: SliderComponentShape.noOverlay,
-        activeTrackColor: Colors.deepPurple,
-        inactiveTrackColor: Colors.deepPurple.shade200.withAlpha(192),
+        activeTrackColor: KDarkTheme.primary,
+        inactiveTrackColor: KDarkTheme.primary.withAlpha(30),
         trackShape: const RoundedRectSliderTrackShape(),
         rangeTrackShape: const RectangularRangeSliderTrackShape(),
       ),
@@ -70,7 +71,7 @@ class SliderWidget extends StatelessWidget {
                           style: TextStyle(
                             color: labelColor,
                             fontWeight: FontWeight.bold,
-                            fontSize: 24,
+                            fontSize: 20,
                           ),
                         ),
                         if (icon != null)

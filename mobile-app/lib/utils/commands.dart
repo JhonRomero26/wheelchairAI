@@ -1,8 +1,8 @@
 enum MovementCommands {
   forward('mf'),
   backward('mb'),
-  left('ml'),
-  right('mr'),
+  left('ml3'),
+  right('mr3'),
   leftOff('l0'),
   rightOff('r0'),
   rotateLeft('rl'),
@@ -28,6 +28,14 @@ enum ActionCommands {
   caxon('claxon');
 
   const ActionCommands(this.value);
+  final String value;
+}
+
+enum ModeCommands {
+  homeOn('md=hm1'),
+  homeOff('md=hm0');
+
+  const ModeCommands(this.value);
   final String value;
 }
 

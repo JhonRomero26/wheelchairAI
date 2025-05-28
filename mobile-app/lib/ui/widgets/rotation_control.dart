@@ -21,7 +21,10 @@ class RotationControl extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 24),
+        SizedBox(
+          width: 92,
+          height: 48,
+        ),
         IconButton(
           iconSize: 42,
           onPressed: () {},

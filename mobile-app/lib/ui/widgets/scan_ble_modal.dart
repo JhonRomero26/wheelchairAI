@@ -54,11 +54,11 @@ class _ScanBleModalState extends State<ScanBleModal> {
     );
 
     await BleController.to.connect(connectDeviceId: device.id);
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (BleController.to.connectionState == DeviceConnectionState.connected) {
-      Get.back();
-    }
+    await Future.delayed(const Duration(seconds: 2), () {
+      if (BleController.to.connectionState == DeviceConnectionState.connected) {
+        Get.back();
+      }
+    });
   }
 
   Widget _buildScanResultTiles(BuildContext context) {

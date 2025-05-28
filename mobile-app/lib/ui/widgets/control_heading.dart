@@ -18,8 +18,8 @@ class ControlHeading extends StatelessWidget {
             icon: const Icon(Icons.power_settings_new),
           ),
           Image.asset(
-            'assets/images/logo-horizontal.png',
-            width: 120,
+            'assets/images/kittunl-logo.png',
+            width: 94,
             fit: BoxFit.contain,
           ),
           const SizedBox(

@@ -17,22 +17,22 @@ class SpeedSelector extends StatelessWidget {
       child: Row(
         children: [
           SpeedOption(
-            onPress: () => WheelchairController.to.setSpeedModeIndex(0),
+            onTap: () => WheelchairController.to.setSpeedModeIndex(0),
             index: 0,
             icon: const Icon(Icons.eco),
-            title: const Text('Eco'),
+            title: Text('Eco'),
           ),
           SpeedOption(
-            onPress: () => WheelchairController.to.setSpeedModeIndex(1),
+            onTap: () => WheelchairController.to.setSpeedModeIndex(1),
             index: 1,
             icon: const Icon(Icons.speed),
-            title: const Text('Moderado'),
+            title: Text('Moderado'),
           ),
           SpeedOption(
-            onPress: () => WheelchairController.to.setSpeedModeIndex(2),
+            onDoubleTap: () => WheelchairController.to.setSpeedModeIndex(2),
             index: 2,
             icon: const Icon(Icons.bolt),
-            title: const Text('Deportivo'),
+            title: Text('Deportivo'),
           ),
         ],
       ),
