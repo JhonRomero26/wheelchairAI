@@ -1,3 +1,8 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
 [project]
 name = "voice-commands"
 version = "0.1.0"
@@ -6,3 +11,9 @@ authors = [
 ]
 description = "Voice commands for move wheelchair with neuronal networks"
 requires-python = ">=3.8,<3.11"
+
+dependencies = [
+    "numpy",
+    "tensorflow",
+    "sounddevice"
+]
