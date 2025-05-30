@@ -7,3 +7,11 @@ __pycache__
 
 # virtual environment
 .venv
+
+# generated
+src/*.wav
+src/dataset
+src/mit_rirs
+src/fma*
+src/audioset*
+src/commands_augmented
