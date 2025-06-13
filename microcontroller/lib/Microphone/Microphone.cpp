@@ -1,43 +1,78 @@
 #include "Microphone.h"
 
-void Microphone::configureMicrophone() {
-  adc1_config_width(ADC_WIDTH_12Bit);
-  adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_11db);
-  esp_adc_cal_characterize(
-    ADC_UNIT_1,
-    ADC_ATTEN_11db,
-    ADC_WIDTH_12Bit,
-    vref,
-    &adc_chars
-  );
-  // i2s_config_t i2s_config = {
-  //   .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX | I2S_MODE_ADC_BUILT_IN),
-  //   .sample_rate = 40000,
-  //   .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-  //   .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-  //   .communication_format = I2S_COMM_FORMAT_I2S_LSB,
-  //   .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-  //   .dma_buf_count = 2,
-  //   .dma_buf_len = 1024,
-  //   .use_apll = false,
-  //   .tx_desc_auto_clear = false,
-  //   .fixed_mclk = 0};
 
-  // // Install and start I2S driver
-  // i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-  // // Init ADC pad
-  // i2s_set_adc_mode(ADC_UNIT_1, ADC1_CHANNEL_7);
-  // // Enable the ADC
-  // i2s_adc_enable(I2S_NUM_0);
+Microphone::Microphone(int8_t amplifyFactor) : amplifyFactor(amplifyFactor) {}
+
+void Microphone::configureMicrophone() {
+  i2s_install();
+  i2s_setpin();
+  i2s_start(MIC_I2S_PORT);
 }
 
+void Microphone::i2s_install() {
+  const i2s_config_t i2s_config = {
+    .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+    .sample_rate = MIC_SAMPLE_RATE,
+    .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+    .intr_alloc_flags = 0,
+    .dma_buf_count = MIC_DMA_BUFF_COUNT,
+    .dma_buf_len = MIC_DMA_BUFF_LEN,
+    .use_apll = false
+  };
 
-void Microphone::microphoneTask(void* pvParameters) {
-  (void) pvParameters;
+  i2s_driver_install(MIC_I2S_PORT, &i2s_config, 0, NULL);
+}
+
+void Microphone::i2s_setpin() {
+  i2s_pin_config_t pin_config = {
+    .bck_io_num = MIC_I2S_SCK,
+    .ws_io_num = MIC_I2S_WS,
+    .data_out_num = I2S_PIN_NO_CHANGE,
+    .data_in_num = MIC_I2S_SD
+  };
+
+  i2s_set_pin(MIC_I2S_PORT, &pin_config);
+}
+
+esp_err_t Microphone::readAudio() {
+  readResult = i2s_read(
+    MIC_I2S_PORT, 
+    &StreamBuffer,
+    StreamBufferNumBytes,
+    &bytesRead, 
+    portMAX_DELAY
+  );
   
-  while (true) {
-    int sample = adc1_get_raw(ADC1_CHANNEL_7);
-    int miliVolts = esp_adc_cal_raw_to_voltage(sample, &adc_chars);
-    testHwm("Microphone task");
-  }
+  return readResult;
+}
+
+int16_t* Microphone::getStreamBuffer() {
+  if (amplifyFactor > 1) {
+    int samplesRead = bytesRead / 2;
+    if (samplesRead > 0) {
+    for (int i = 0; i < samplesRead; i++) {
+        int32_t sample = StreamBuffer[i] * amplifyFactor;
+        
+        if (sample > 32700) {
+          sample = 32700;
+        } else if (sample < -32700) {
+          sample = -32700;
+        }
+        
+        StreamBuffer[i] = sample;
+      }
+    }
+  } 
+
+  return StreamBuffer;
+}
+
+esp_err_t Microphone::getReadResult() {
+  return readResult;
+}
+
+size_t Microphone::getBytesRead() {
+  return bytesRead;
 }
