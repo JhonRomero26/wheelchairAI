@@ -35,8 +35,7 @@ public:
   
   DetectionEvent determine_detected();
   
-  size_t generate_features(int16_t* audio_buffer, int samples_available);
-  int8_t* getFeatures(); 
+  float* generate_features(int16_t* audio_buffer, int samples_available);
   bool load_model();
   void unload_model();
   bool perform_streaming_inference(const int8_t features[]);
@@ -51,10 +50,10 @@ public:
   size_t sliding_window_size_;
   size_t audio_index_ = 0;
   
-  ArduinoFFT<double> fft_;
-  double vReal_[FFT_SIZE];
-  double vImag_[FFT_SIZE];
-  double windowing_factors_[FFT_SIZE / 2];
+  ArduinoFFT<float> fft_;
+  float vReal_[FFT_SIZE];
+  float vImag_[FFT_SIZE];
+  float windowing_factors_[FFT_SIZE / 2];
   int8_t features_buffer[PREPROCESSOR_FEATURE_SIZE];
   
   const tflite::Model* model_ = nullptr;

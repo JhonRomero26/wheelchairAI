@@ -98,35 +98,39 @@ bool StreamingModel::perform_streaming_inference(const int8_t features[]) {
 }
 
 
-size_t StreamingModel::generate_features(int16_t* audio_buffer, int samples_available) {
-  if (samples_available < AUDIO_BUFFER_SIZE) return 0;
-
-  for (size_t window = 0; window < NUM_WINDOWS; window++) {
-    for (size_t i = 0; i < FFT_SIZE; i++) {
-      vReal_[i] = audio_buffer[window * SAMPLES_PER_WINDOW + i];
-    }
-
-    fft_.compute(FFTDirection::Forward);
-    fft_.complexToMagnitude(vReal_, vImag_, FFT_SIZE);
-
-    for (size_t i = 0; i < FEATURE_SIZE; i++) {
-      size_t start = (FFT_SIZE / 2) * i / FEATURE_SIZE;
-      size_t end = (FFT_SIZE / 2) * (i + 1) / FEATURE_SIZE;
-      double avg = 0;
-
-      for (size_t j = start; j < end; j++) {
-        avg += vReal_[j];
-      }
-
-      avg /= end - start;
-
-      features_buffer[window * FEATURE_SIZE + i] = static_cast<int8_t>(
-        clamp(avg / 256, INT8_MIN, INT8_MAX)
-      );
-    }
+float* StreamingModel::generate_features(int16_t* audio_buffer, int samples_available) {
+  for (size_t i = 0; i < FFT_SIZE; i++) {
+    vReal_[i] = clamp(audio_buffer[i] * 10, INT16_MIN, INT16_MAX);
+    vImag_[i] = 0;
   }
 
-  return NUM_WINDOWS * FEATURE_SIZE;  
+  // for (size_t window = 0; window < NUM_WINDOWS; window++) {
+  //   for (size_t i = 0; i < FFT_SIZE; i++) {
+  //     vReal_[i] = clamp(audio_buffer[window * SAMPLES_PER_WINDOW + i] * 10, INT16_MIN, INT16_MAX);
+  //   }
+
+  fft_.windowing(FFTWindow::Hamming, FFTDirection::Forward);
+  fft_.compute(FFTDirection::Forward);
+  fft_.complexToMagnitude();
+
+  //   for (size_t i = 0; i < FEATURE_SIZE; i++) {
+  //     size_t start = (FFT_SIZE / 2) * i / FEATURE_SIZE;
+  //     size_t end = (FFT_SIZE / 2) * (i + 1) / FEATURE_SIZE;
+  //     double avg = 0;
+
+  //     for (size_t j = start; j < end; j++) {
+  //       avg += vReal_[j];
+  //     }
+
+  //     avg /= end - start;
+
+  //     features_buffer[window * FEATURE_SIZE + i] = static_cast<int8_t>(
+  //       clamp(avg / 256, INT8_MIN, INT8_MAX)
+  //     );
+  //   }
+  // }
+
+  return vReal_;  
 }
 
 void StreamingModel::reset_probabilities() {
@@ -154,10 +158,6 @@ StreamingModel::DetectionEvent StreamingModel::determine_detected() {
   ignore_windows_ = 0;  // Reiniciar contador de ventanas ignoradas
 
   return event;
-}
-
-int8_t* StreamingModel::getFeatures() {
-  return features_buffer;
 }
 
 bool StreamingModel::register_streaming_ops(tflite::MicroMutableOpResolver<20>& op_resolver) {
